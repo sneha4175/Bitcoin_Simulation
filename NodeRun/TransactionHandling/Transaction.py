@@ -23,6 +23,7 @@ class Transaction:
         receiverHashes,
         genesisBlockTxn=False,
     ):
+        logger.info("Transaction creation instantiated ")
         self._txnHash = ""
         self.validTransaction = True
         self.input = self.processInput(prevTxns, senderHashesList)
@@ -36,7 +37,6 @@ class Transaction:
         return self._txnHash
 
     def processInput(self, prevTxns, senderHashesList):
-        logger.info("Process Input Called")
         inputEntryList = []
         inputHash = ""
 
@@ -53,7 +53,6 @@ class Transaction:
             logger.info("Input Entry Added : " + str(inputEntry))
             inputEntryList.append(inputEntry)
         self._txnHash += inputHash
-        logger.info("Txn Hash After processing the input hash: " + self._txnHash)
         return inputEntryList
 
     # NOTE: Processing the output
@@ -72,7 +71,10 @@ class Transaction:
             outputEntryList.append(outputEntry)
         else:
             senderBalance = self.validateTransaction(amount)
-            logger.info("Sender balance after validating the transaction")
+            logger.info(
+                "Sender balance after validating the transaction" + str(senderBalance)
+            )
+
             if senderBalance == -1:
                 self._txnHash = generateHash(self._txnHash)
                 self.validTransaction = False
@@ -124,8 +126,8 @@ class Transaction:
                 str(outputEntry.getAmount())
                 + outputEntry.getReceiverHashes().lockedTxnHash.hexdigest()
             )
+            logger.info("Output Entry added to Transaction : " + str(outputEntry))
         self._txnHash = generateHash(self._txnHash)
-        logger.info("Txn Hash Generated after processing output : " + self._txnHash)
 
         for outputEntry in outputEntryList:
             outputEntry.getReceiverHashes().lockedTxnHash.update(self._txnHash.encode())
@@ -156,8 +158,11 @@ class Transaction:
 
         # NOTE: validAmount = total credit received from the previous txns
         # amount: Sender's node request to spend the provided amount
+
         if senderBalance < amount:
-            senderBalance
+            logger.info("Sender doesn't have enough balance , invalid transaction")
+            senderBalance = -1
+
         logger.info("Validate Transaction, " + str(senderBalance))
         return senderBalance
 

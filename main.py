@@ -19,7 +19,11 @@ if __name__ == "__main__":
 
     setNodeId("0")
     nodesList[0].createGenesisBlock()
-    print("--------After Creating Genesis Block Initial State of the Nodes---------")
+
+    print("********After Creating Genesis Block Initial State of the Nodes*********")
+    logger.info(
+        "********After Creating Genesis Block Initial State of the Nodes*********"
+    )
     nodesList[0].printUTXO()
     futures = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=nodeCount) as executor:
@@ -34,4 +38,3 @@ if __name__ == "__main__":
             fut.result()
         except:
             traceback.print_exc()
-

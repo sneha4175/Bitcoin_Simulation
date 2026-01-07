@@ -50,17 +50,27 @@ class Node:
 
     def getRandomWalletPublicKeyHash(self):
         randomWalletIdx = randrange(0, walletCountPerNode)
-        logger.info("Generated wallet random id : " + str(randomWalletIdx))
+        logger.info(
+            "Get random wallet called : random wallet selected "
+            + str(self.nodeId)
+            + " . "
+            + str(randomWalletIdx)
+        )
         walletSelected = self.wallets[randomWalletIdx]
         return walletSelected.getWalletPublicKeyHash()
 
     def getNodeConsensus(self, block):
-        logger.info("Get Node Consensus Called")
         if self.blockChain.latestBlock != block.prevBlockPtr:
+            logger.info(
+                "getNodeConsensus: The provided block is not the latest block, returned False"
+            )
             return False
         else:
             for txn in block.txnList:
                 if txn.validTransaction is False:
+                    logger.info(
+                        "getNodeConsensus: One of the transaction in block is not valid, returned False"
+                    )
                     return False
 
                 for inputEntry in txn.input:
@@ -76,21 +86,23 @@ class Node:
                             if utxoEntry.getTransaction() == txn:
                                 searchFlag = True
                                 break
+                        if not searchFlag:
+                            logger.info(
+                                "getNodeConsensus: Transaction not found in local UTXO, returned False"
+                            )
                         return searchFlag
                     except KeyError:
                         return False
         return True
 
     def processTransaction(self, txn):
-        logger.info("Process Transaction Called")
         logger.info(
-            "Process Transaction : Txn Validity Check " + str(txn.validTransaction)
+            "processTransaction : Txn Validity Check " + str(txn.validTransaction)
         )
         if txn.validTransaction:
             self.nodeTxns.append(txn)
 
     def processBlock(self, block):
-        logger.info("Process Block called")
         if self.blockChain.rootBlock is None:
             self.blockChain.rootBlock = block
 
@@ -138,11 +150,12 @@ class Node:
                     self.localUTXO[recvPubKeyHash].append(entry)
                 except KeyError:
                     self.localUTXO[recvPubKeyHash] = [entry]
-
+        logger.info(
+            "Block processing completed: Transactions have been added to local UTXO"
+        )
         self.start = time.time()
 
     def createGenesisBlock(self):
-        logger.info("Create Genesis Block Called")
         bitCoinVal = genesisBlockBitCoin
         for _ in range(nodeCount):
             randomNode = randrange(0, nodeCount)
@@ -156,18 +169,18 @@ class Node:
 
         for node in Node.listOfNodes:
             node.processBlock(blk)
-        # Once the nodes have processed the txns, this basically removes the transactions related to genesis transactions from the list
+        logger.info("Genesis block creation completed")
+        # Once the nodes have processed the txns, this basically removes the transactions related to genesis transactions from the list of node - 0
         self.nodeTxns = []
 
     def createBlock(self):
-        logger.info("Create Block Called")
         start_time = time.time()
         copyOfTxnList = self.nodeTxns.copy()
         blk = Block(self.blockChain.latestBlock, copyOfTxnList)
+        logger.info("createBlock: Block creation successful")
         return blk  # Returns the block
 
     def proofOfWork(self):
-        logger.info("Proof Of Work Called")
         # NOTE: Basically pow defines which node gets to create block
         # If the current node has the least , last created block hash; wins the pow
         for node in Node.listOfNodes:
@@ -175,7 +188,9 @@ class Node:
                 node.lastCreatedBlockHashVal is not None
                 and self.lastCreatedBlockHashVal > node.lastCreatedBlockHashVal
             ):
-                logger.info(" POW : The last created block is not the least")
+                logger.info(
+                    " POW : The last created block is not the least, returned False"
+                )
                 return False
 
             # NOTE: This is a tie breaker condition
@@ -186,15 +201,14 @@ class Node:
                 and self.nodeId > node.nodeId
             ):
                 logger.info(
-                    " POW : in case of same block hash, the nodeid is not the least"
+                    " POW : in case of same block hash, the nodeid is not the least , returned False"
                 )
-                return False
                 return False
         return True
 
-    # NOTE: BOOKMARK ... you're here , start here
+    # TODO : Update this structure of the transaction to show well formatted transaction
     def printTxn(self, txnList):
-        logger.info("Print Txn is called")
+        logger.info("printTxn : Print the transaction with input and output enteries")
         txnsExecuted = PrettyTable()
         txnsExecuted.field_names = ["ID", "IN/OUT", "Wallet ID", "Amount"]
         txnIdx = 0
@@ -224,9 +238,10 @@ class Node:
                 )
             txnIdx += 1
         print(txnsExecuted)
+        logger.info("\n" + str(txnsExecuted))
 
     def printUTXO(self):
-        logger.info("Print UTXO is called")
+        logger.info("printUTXO: Printing the local UTXO state, this is basically")
         x = PrettyTable()
         columns = ["Node ID"]
         for i in range(walletCountPerNode):
@@ -252,8 +267,9 @@ class Node:
                 row.append(balance)
             x.add_row(row)
         print(x)
+        logger.info("\n" + str(x))
         print(
-            "--------------------------------------------------------------------------------"
+            "********************************************************************************"
         )
 
     def run(self):
@@ -284,21 +300,34 @@ class Node:
                         logger.info("Inside POW block")
                         if flag:
                             print(
-                                "--------Before Performing the Transaction final state of the Nodes---------"
+                                "********Before Performing the Transaction final state of the Nodes*********"
+                            )
+                            logger.info(
+                                "********Before Performing the Transaction final state of the Nodes*********"
                             )
                             self.printUTXO()
                             print(
-                                " -------------------------------------------------------------------------- "
+                                "********************************************************************************"
                             )
-
+                            logger.info(
+                                "********************************************************************************"
+                            )
                             print(
-                                "---------------------- Transactions Performed --------------------------"
+                                "*********************** Transactions Performed **************************"
+                            )
+                            logger.info(
+                                "*********************** Transactions Performed **************************"
                             )
                             print(Node.allTxnPerformedLog)
+                            logger.info("\n" + str(Node.allTxnPerformedLog))
+
                             Node.allTxnPerformedLog.clear_rows()
 
                             print(
-                                " -------------------------------------------------------------------------- "
+                                "********************************************************************************"
+                            )
+                            logger.info(
+                                "********************************************************************************"
                             )
 
                             for node in Node.listOfNodes:
@@ -306,18 +335,27 @@ class Node:
 
                             logger.info("Completed the processBlock for all the nodes")
                             print(
-                                "--------After Performing the Transaction final state of the Nodes---------"
+                                "********After Performing the Transaction final state of the Nodes*********"
+                            )
+                            logger.info(
+                                "********After Performing the Transaction final state of the Nodes*********"
                             )
 
                             self.printUTXO()
 
                             print(
-                                "------------------------ Transactions Executed----------------------------"
+                                "*********************** Transactions Executed **************************"
+                            )
+                            logger.info(
+                                "*********************** Transactions Executed **************************"
                             )
                             self.printTxn(block.txnList)
 
                             print(
-                                " -------------------------------------------------------------------------- "
+                                "********************************************************************************"
+                            )
+                            logger.info(
+                                "********************************************************************************"
                             )
 
                             Node.txnFlag = True
