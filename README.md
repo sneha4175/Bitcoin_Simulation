@@ -1,16 +1,21 @@
 ## Bitcoin
 This work is forked from [RajputGarima/Bitcoin](https://github.com/RajputGarima/Bitcoin). Earlier I was just using this for understanding BitCoin system as whole. But I started cleaning the code base for my own understanding. Hence following changes has been added :-
-1. Refactored the full code based into some simple classes
-2. Added logging mechanism with `__str__` implementation for each class, for easy tracking.
+1. Refactored the full code based into simple classes, and encapsulated the operations into those classes.
+2. Added few extra classes for better visibilility.
+3. Every run adds the logs into `/logs/Bitcoin_<date-time>.log` files.
+4. The code runs parallel threads as Nodes, but it uses `future.concurrent` library. Which inherently doesn't show any exceptions in case something's wrong. We have corrected this by adding suitable code blocks to show exception if it does fail.
+5. Added logging mechanism with `__str__` implementation for each class, for easy tracking.
+6. Updated variables to make logic explainable.
 
 
 ## ToDo
 ```text
 1. More refactoring
-2. Better representation of the output
+2. Performed transaction still looks little off, I somehow want to show it in way where we can show a single transaction and its input and output is shown in single line.
 3. Add screen shots here for better understanding
 4. Add comments and understanding on the go
-5. Integrate design patterns if any
+5. Integrate design patterns if we can...
+6. Think of scalability in terms of customers of the system.
 ```
 
 ## Summary
